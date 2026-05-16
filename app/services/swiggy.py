@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from app.core.config import settings
 from app.models.schemas import PlatformListing, OperatingHours, Platform
+from app.services.mock_providers import mock_swiggy_provider
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,9 @@ class SwiggyService:
         radius: int = 3000,
     ) -> List[PlatformListing]:
         if not self.is_available:
+            if settings.USE_MOCK_PROVIDERS:
+                logger.info("Swiggy API key not set — returning mock Swiggy listings")
+                return mock_swiggy_provider.search_restaurants(query, lat, lng, radius)
             logger.info("Swiggy API key not set — skipping Swiggy fetch")
             return []
 

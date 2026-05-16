@@ -7,7 +7,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.core.redis import init_redis, close_redis
-from app.routers import compare, restaurants, health, location, photos
+from app.routers import cart, compare, health, location, photos, providers, restaurants
 
 
 @asynccontextmanager
@@ -36,6 +36,8 @@ app.add_middleware(
 
 app.include_router(health.router, tags=["Health"])
 app.include_router(compare.router, prefix="/api", tags=["Compare"])
+app.include_router(cart.router, prefix="/api", tags=["Cart"])
+app.include_router(providers.router, prefix="/api", tags=["Providers"])
 app.include_router(restaurants.router, prefix="/api", tags=["Restaurants"])
 app.include_router(location.router, prefix="/api", tags=["Location"])
 app.include_router(photos.router, prefix="/api", tags=["Photos"])

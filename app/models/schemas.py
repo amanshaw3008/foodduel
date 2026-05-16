@@ -33,6 +33,7 @@ class PlatformListing(BaseModel):
 
 
 class MenuItem(BaseModel):
+    id: Optional[str] = None
     name: str
     category: str
     price: float
@@ -92,3 +93,47 @@ class LocationLookupResponse(BaseModel):
     longitude: float
     formatted_address: str
     source: str
+
+
+class ProviderSummary(BaseModel):
+    id: Platform
+    name: str
+    mode: str = "mock"
+
+
+class CartItemRequest(BaseModel):
+    menu_item_id: str = Field(..., min_length=1)
+    quantity: int = Field(default=1, ge=1, le=50)
+
+
+class CartCompareRequest(BaseModel):
+    items: List[CartItemRequest] = Field(..., min_length=1)
+    latitude: Optional[float] = Field(default=None, ge=-90, le=90)
+    longitude: Optional[float] = Field(default=None, ge=-180, le=180)
+
+
+class CartLineItem(BaseModel):
+    menu_item_id: str
+    name: str
+    quantity: int
+    unit_price: float
+    line_total: float
+
+
+class CartQuote(BaseModel):
+    provider_id: Platform
+    provider_name: str
+    currency: str = "INR"
+    eta_minutes: int
+    line_items: List[CartLineItem]
+    subtotal: float
+    discount: float
+    taxes: float
+    delivery_fee: float
+    platform_fee: float
+    total: float
+
+
+class CartCompareResponse(BaseModel):
+    winner: Optional[CartQuote]
+    quotes: List[CartQuote]

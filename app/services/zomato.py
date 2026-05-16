@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from app.core.config import settings
 from app.models.schemas import PlatformListing, OperatingHours, Platform
+from app.services.mock_providers import mock_zomato_provider
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,9 @@ class ZomatoService:
         radius: int = 3000,
     ) -> List[PlatformListing]:
         if not self.is_available:
+            if settings.USE_MOCK_PROVIDERS:
+                logger.info("Zomato API key not set — returning mock Zomato listings")
+                return mock_zomato_provider.search_restaurants(query, lat, lng, radius)
             logger.info("Zomato API key not set — skipping Zomato fetch")
             return []
 

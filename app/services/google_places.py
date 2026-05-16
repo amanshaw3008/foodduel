@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 
 from app.core.config import settings
 from app.models.schemas import PlatformListing, OperatingHours, Platform, UnifiedRestaurant
+from app.services.mock_providers import mock_unified_restaurants
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +28,8 @@ async def search_nearby_restaurants(
     Used as the primary data source until Swiggy/Zomato APIs are available.
     """
     if not settings.GOOGLE_PLACES_API_KEY:
-        logger.warning("GOOGLE_PLACES_API_KEY not set — returning mock data")
-        return _mock_results(query, lat, lng)
+        logger.warning("GOOGLE_PLACES_API_KEY not set — returning mock provider data")
+        return mock_unified_restaurants(query, lat, lng)
 
     params = {
         "key": settings.GOOGLE_PLACES_API_KEY,

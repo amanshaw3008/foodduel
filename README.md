@@ -60,11 +60,14 @@ in local development. For a deployed API, set `VITE_API_BASE_URL`.
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/health` | Service status + API key check |
+| GET | `/api/providers` | List active FoodDuel providers |
 | GET | `/api/compare` | Compare restaurants across platforms |
 | GET | `/api/location/pincode/{pincode}` | Resolve an Indian PIN code to coordinates |
 | GET | `/api/photos/google` | Stream live Google Places restaurant photos |
 | GET | `/api/photos/cuisine` | Stream live nearby cuisine tile photos |
+| GET | `/api/providers/{provider_id}/restaurants/{restaurant_id}/menu` | Provider-specific mock menu |
 | GET | `/api/restaurants/{place_id}` | Full detail + operating hours |
+| POST | `/api/cart/compare` | Compare a cart across mock providers |
 
 ### Compare Example
 
@@ -107,8 +110,25 @@ GET /api/compare?query=biryani&lat=17.4435&lng=78.3772&radius=3000
 | Source | Status | Notes |
 |--------|--------|-------|
 | Google Places | ✅ Active | Set `GOOGLE_PLACES_API_KEY` in `.env` |
-| Swiggy | ⏳ Pending | Apply at Swiggy Builders Club |
-| Zomato | ⏳ Pending | Apply at Zomato Developer Portal |
+| Swiggy | 🧪 Mock / ⏳ Pending | Mock provider is active by default; replace after approved access |
+| Zomato | 🧪 Mock / ⏳ Pending | Mock provider is active by default; replace after approved access |
+
+Set `USE_MOCK_PROVIDERS=true` for local mobile/web development without approved platform APIs.
+
+### Cart Compare Example
+
+```bash
+curl -X POST http://localhost:8000/api/cart/compare \
+  -H 'content-type: application/json' \
+  -d '{
+    "items": [
+      { "menu_item_id": "margherita-pizza", "quantity": 1 },
+      { "menu_item_id": "classic-fries", "quantity": 2 }
+    ],
+    "latitude": 17.4435,
+    "longitude": 78.3772
+  }'
+```
 
 ## What's Left To Build
 

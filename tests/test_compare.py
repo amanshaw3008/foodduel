@@ -28,6 +28,7 @@ async def test_compare_basic():
     data = resp.json()
     assert "results" in data
     assert data["query"] == "biryani"
+    assert data["total_results"] >= 1
 
 
 @pytest.mark.asyncio
@@ -188,3 +189,61 @@ async def test_compare_restaurant_closed_on_one_platform():
     for r in resp.json()["results"]:
         # Both platform fields can be None — that's valid
         assert "swiggy" in r or "zomato" in r
+
+
+@pytest.mark.asyncio
+async def test_providers_endpoint_lists_mock_providers():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get("/api/providers")
+
+    assert resp.status_code == 200
+    data = resp.json()
+    assert {provider["id"] for provider in data} == {"swiggy", "zomato"}
+    assert all(provider["mode"] == "mock" for provider in data)
+
+
+@pytest.mark.asyncio
+async def test_provider_menu_endpoint_returns_item_ids():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get(
+            "/api/providers/swiggy/restaurants/pizza-yard-kondapur/menu"
+        )
+
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["source"] == "swiggy_mock"
+    assert data["items"][0]["id"]
+    assert data["items"][0]["platform"] == "swiggy"
+
+
+@pytest.mark.asyncio
+async def test_cart_compare_returns_sorted_quotes():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post(
+            "/api/cart/compare",
+            json={
+                "items": [
+                    {"menu_item_id": "margherita-pizza", "quantity": 1},
+                    {"menu_item_id": "classic-fries", "quantity": 2},
+                ],
+                "latitude": 17.4435,
+                "longitude": 78.3772,
+            },
+        )
+
+    assert resp.status_code == 200
+    data = resp.json()
+    totals = [quote["total"] for quote in data["quotes"]]
+    assert totals == sorted(totals)
+    assert data["winner"]["total"] == totals[0]
+
+
+@pytest.mark.asyncio
+async def test_cart_compare_rejects_unknown_items():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post(
+            "/api/cart/compare",
+            json={"items": [{"menu_item_id": "not-real", "quantity": 1}]},
+        )
+
+    assert resp.status_code == 400

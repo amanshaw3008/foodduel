@@ -36,6 +36,7 @@ export type UnifiedRestaurant = {
 };
 
 export type MenuItem = {
+  id?: string | null;
   name: string;
   category: string;
   price: number;
@@ -51,6 +52,42 @@ export type RestaurantMenuResponse = {
   last_updated?: string | null;
   disclaimer?: string | null;
   items: MenuItem[];
+};
+
+export type ProviderSummary = {
+  id: "swiggy" | "zomato";
+  name: string;
+  mode: string;
+};
+
+export type CartItemRequest = {
+  menu_item_id: string;
+  quantity: number;
+};
+
+export type CartQuote = {
+  provider_id: "swiggy" | "zomato";
+  provider_name: string;
+  currency: "INR";
+  eta_minutes: number;
+  line_items: Array<{
+    menu_item_id: string;
+    name: string;
+    quantity: number;
+    unit_price: number;
+    line_total: number;
+  }>;
+  subtotal: number;
+  discount: number;
+  taxes: number;
+  delivery_fee: number;
+  platform_fee: number;
+  total: number;
+};
+
+export type CartCompareResponse = {
+  winner?: CartQuote | null;
+  quotes: CartQuote[];
 };
 
 export type CompareResponse = {
@@ -143,6 +180,49 @@ export async function fetchRestaurantMenu(params: {
 
   if (!response.ok) {
     throw new Error("FoodDuel could not fetch this menu right now.");
+  }
+
+  return response.json();
+}
+
+export async function fetchProviders(): Promise<ProviderSummary[]> {
+  const response = await fetch(`${apiBase}/api/providers`);
+
+  if (!response.ok) {
+    throw new Error("FoodDuel could not fetch providers right now.");
+  }
+
+  return response.json();
+}
+
+export async function fetchProviderMenu(params: {
+  providerId: "swiggy" | "zomato";
+  restaurantId: string;
+}): Promise<RestaurantMenuResponse> {
+  const response = await fetch(
+    `${apiBase}/api/providers/${params.providerId}/restaurants/${params.restaurantId}/menu`
+  );
+
+  if (!response.ok) {
+    throw new Error("FoodDuel could not fetch this provider menu right now.");
+  }
+
+  return response.json();
+}
+
+export async function compareCart(params: {
+  items: CartItemRequest[];
+  latitude?: number;
+  longitude?: number;
+}): Promise<CartCompareResponse> {
+  const response = await fetch(`${apiBase}/api/cart/compare`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(params)
+  });
+
+  if (!response.ok) {
+    throw new Error("FoodDuel could not compare this cart right now.");
   }
 
   return response.json();
