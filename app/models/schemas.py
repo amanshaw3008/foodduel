@@ -32,6 +32,24 @@ class PlatformListing(BaseModel):
     image_url: Optional[str] = None
 
 
+class MenuItem(BaseModel):
+    name: str
+    category: str
+    price: float
+    is_veg: bool = False
+    is_popular: bool = False
+    platform: Platform = Platform.GOOGLE
+
+
+class RestaurantMenuResponse(BaseModel):
+    restaurant_name: str
+    google_place_id: Optional[str] = None
+    source: str
+    last_updated: Optional[str] = None
+    disclaimer: Optional[str] = None
+    items: List[MenuItem]
+
+
 class UnifiedRestaurant(BaseModel):
     """
     One restaurant entry merging data from both platforms.
@@ -66,3 +84,11 @@ class CompareResponse(BaseModel):
 class RestaurantDetailResponse(BaseModel):
     restaurant: UnifiedRestaurant
     cached: bool = False
+
+
+class LocationLookupResponse(BaseModel):
+    pincode: str
+    latitude: float
+    longitude: float
+    formatted_address: str
+    source: str

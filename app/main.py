@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.core.redis import init_redis, close_redis
-from app.routers import compare, restaurants, health
+from app.routers import compare, restaurants, health, location, photos
 
 
 @asynccontextmanager
@@ -34,3 +34,5 @@ app.add_middleware(
 app.include_router(health.router, tags=["Health"])
 app.include_router(compare.router, prefix="/api", tags=["Compare"])
 app.include_router(restaurants.router, prefix="/api", tags=["Restaurants"])
+app.include_router(location.router, prefix="/api", tags=["Location"])
+app.include_router(photos.router, prefix="/api", tags=["Photos"])
