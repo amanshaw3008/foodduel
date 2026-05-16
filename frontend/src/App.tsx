@@ -32,6 +32,12 @@ type FormState = {
   radius: string;
 };
 
+type SearchLocation = {
+  lat: number;
+  lng: number;
+  label: string;
+};
+
 const defaultForm: FormState = {
   query: "biryani",
   pincode: "500081",
@@ -124,7 +130,8 @@ function App() {
   const [cached, setCached] = useState(false);
   const [searchedQuery, setSearchedQuery] = useState("");
   const [locationMode, setLocationMode] = useState<LocationMode>("pincode");
-  const [liveLocation, setLiveLocation] = useState<{ lat: number; lng: number; label: string } | null>(null);
+  const [liveLocation, setLiveLocation] = useState<SearchLocation | null>(null);
+  const [activeLocation, setActiveLocation] = useState<SearchLocation | null>(null);
   const [cuisineSearch, setCuisineSearch] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -134,17 +141,29 @@ function App() {
   const [menuLoadingKey, setMenuLoadingKey] = useState("");
   const [menuError, setMenuError] = useState("");
 
+  const locationLabel = useMemo(() => {
+    if (activeLocation) {
+      return formatLocationLabel(activeLocation.label);
+    }
+
+    if (locationMode === "live") {
+      return liveLocation ? formatLocationLabel(liveLocation.label) : "your live location";
+    }
+
+    return form.pincode.length === 6 ? `PIN ${form.pincode}` : "your selected location";
+  }, [activeLocation, form.pincode, liveLocation, locationMode]);
+
   const resultSummary = useMemo(() => {
     if (!searchedQuery) {
-      return "Start with a dish, restaurant, or craving near Hyderabad.";
+      return `Start with a dish, restaurant, or craving near ${locationLabel}.`;
     }
 
     if (results.length === 0) {
-      return `No restaurants found for ${searchedQuery}.`;
+      return `No restaurants found for ${searchedQuery} near ${locationLabel}.`;
     }
 
-    return `${results.length} places found for ${searchedQuery}`;
-  }, [results.length, searchedQuery]);
+    return `${results.length} places found for ${searchedQuery} near ${locationLabel}`;
+  }, [locationLabel, results.length, searchedQuery]);
 
   const visibleCuisines = useMemo(() => {
     const search = cuisineSearch.trim().toLowerCase();
@@ -192,6 +211,7 @@ function App() {
       setResults(data.results);
       setCached(data.cached);
       setSearchedQuery(data.query);
+      setActiveLocation(location);
       setOpenMenuKey("");
       setMenuError("");
     } catch (err) {
@@ -290,7 +310,7 @@ function App() {
       const location = {
         lat: position.coords.latitude,
         lng: position.coords.longitude,
-        label: "Using your live location"
+        label: "your live location"
       };
       setLiveLocation(location);
       setLocationMode("live");
@@ -372,7 +392,10 @@ function App() {
               <button
                 className={locationMode === "pincode" ? "mode-button active" : "mode-button"}
                 type="button"
-                onClick={() => setLocationMode("pincode")}
+                onClick={() => {
+                  setLocationMode("pincode");
+                  setActiveLocation(null);
+                }}
               >
                 <MapPin size={16} aria-hidden="true" />
                 <span>PIN code</span>
@@ -380,7 +403,10 @@ function App() {
               <button
                 className={locationMode === "live" ? "mode-button active" : "mode-button"}
                 type="button"
-                onClick={() => setLocationMode("live")}
+                onClick={() => {
+                  setLocationMode("live");
+                  setActiveLocation(null);
+                }}
               >
                 <LocateFixed size={16} aria-hidden="true" />
                 <span>Live</span>
@@ -398,7 +424,10 @@ function App() {
                     pattern="[0-9]{6}"
                     value={form.pincode}
                     maxLength={6}
-                    onChange={(event) => setForm({ ...form, pincode: event.target.value.replace(/\D/g, "") })}
+                    onChange={(event) => {
+                      setForm({ ...form, pincode: event.target.value.replace(/\D/g, "") });
+                      setActiveLocation(null);
+                    }}
                     placeholder="500081"
                   />
                 </div>
@@ -460,7 +489,7 @@ function App() {
           <div className="hero-strip">
             <img src={featuredImage} alt="A spread of Indian food dishes" />
             <div className="hero-copy">
-              <p className="eyebrow">Hyderabad preview</p>
+              <p className="eyebrow">{locationLabel} preview</p>
               <h2>{resultSummary}</h2>
               <span>{cached ? "Served from cache" : "Live backend response"}</span>
             </div>
@@ -500,6 +529,13 @@ function EmptyState({ isLoading }: { isLoading: boolean }) {
       </p>
     </div>
   );
+}
+
+function formatLocationLabel(label: string) {
+  return label
+    .replace(/\s*,?\s*India$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function RestaurantCard({
