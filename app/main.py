@@ -51,6 +51,12 @@ if frontend_assets.exists():
 @app.get("/{full_path:path}", include_in_schema=False)
 async def serve_frontend(full_path: str):
     if frontend_index.exists():
-        return FileResponse(frontend_index)
+        return FileResponse(
+            frontend_index,
+            headers={
+                "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+            },
+        )
 
     return {"detail": "Frontend build not found"}
