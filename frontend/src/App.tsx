@@ -39,8 +39,8 @@ type SearchLocation = {
 };
 
 const defaultForm: FormState = {
-  query: "biryani",
-  pincode: "500081",
+  query: "",
+  pincode: "",
   radius: "3000"
 };
 
@@ -199,7 +199,7 @@ function App() {
 
   const resultSummary = useMemo(() => {
     if (!searchedQuery) {
-      return `Start with a dish, restaurant, or craving near ${locationLabel}.`;
+      return "Enter a dish and location to find nearby places.";
     }
 
     if (results.length === 0) {
