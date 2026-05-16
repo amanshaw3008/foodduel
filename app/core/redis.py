@@ -13,13 +13,13 @@ _redis: Optional[aioredis.Redis] = None
 async def init_redis():
     global _redis
     try:
-       _redis = await aioredis.from_url(
-    settings.REDIS_URL,
-    encoding="utf-8",
-    decode_responses=True,
-    socket_connect_timeout=5,
-    socket_timeout=5,
-)
+        _redis = await aioredis.from_url(
+            settings.REDIS_URL,
+            encoding="utf-8",
+            decode_responses=True,
+            socket_connect_timeout=5,
+            socket_timeout=5,
+        )
         await _redis.ping()
         logger.info("✅ Redis connected")
     except Exception as e:
@@ -38,10 +38,6 @@ def get_redis() -> Optional[aioredis.Redis]:
 
 
 def build_cache_key(prefix: str, query: str, lat: float, lng: float) -> str:
-    """
-    Round coordinates to ~500m precision so nearby users share cache hits.
-    Key format: foodduel:{prefix}:{query}:{lat}:{lng}
-    """
     precision = settings.LOCATION_PRECISION
     rounded_lat = round(lat, precision)
     rounded_lng = round(lng, precision)
