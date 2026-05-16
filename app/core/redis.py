@@ -65,3 +65,4 @@ async def set_cached(key, value, ttl=900):
     except Exception as e:
         logger.warning(f"Cache SET failed: {e}")
         return False
+# fixed
