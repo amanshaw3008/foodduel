@@ -13,11 +13,13 @@ _redis: Optional[aioredis.Redis] = None
 async def init_redis():
     global _redis
     try:
-        _redis = await aioredis.from_url(
-            settings.REDIS_URL,
-            encoding="utf-8",
-            decode_responses=True,
-        )
+       _redis = await aioredis.from_url(
+    settings.REDIS_URL,
+    encoding="utf-8",
+    decode_responses=True,
+    socket_connect_timeout=5,
+    socket_timeout=5,
+)
         await _redis.ping()
         logger.info("✅ Redis connected")
     except Exception as e:
