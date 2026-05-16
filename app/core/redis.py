@@ -41,6 +41,52 @@ def build_cache_key(prefix: str, query: str, lat: float, lng: float) -> str:
     precision = settings.LOCATION_PRECISION
     rounded_lat = round(lat, precision)
     rounded_lng = round(lng, precision)
+    safe_query = query.lowe
+cd ~/Desktop/foodduel
+cat > app/core/redis.py << 'EOF'
+import redis.asyncio as aioredis
+import json
+import logging
+from typing import Any, Optional
+
+from app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+_redis: Optional[aioredis.Redis] = None
+
+
+async def init_redis():
+    global _redis
+    try:
+        _redis = await aioredis.from_url(
+            settings.REDIS_URL,
+            encoding="utf-8",
+            decode_responses=True,
+            socket_connect_timeout=5,
+            socket_timeout=5,
+        )
+        await _redis.ping()
+        logger.info("✅ Redis connected")
+    except Exception as e:
+        logger.warning(f"⚠️ Redis unavailable — caching disabled: {e}")
+        _redis = None
+
+
+async def close_redis():
+    global _redis
+    if _redis:
+        await _redis.close()
+
+
+def get_redis() -> Optional[aioredis.Redis]:
+    return _redis
+
+
+def build_cache_key(prefix: str, query: str, lat: float, lng: float) -> str:
+    precision = settings.LOCATION_PRECISION
+    rounded_lat = round(lat, precision)
+    rounded_lng = round(lng, precision)
     safe_query = query.lower().strip().replace(" ", "_")
     return f"foodduel:{prefix}:{safe_query}:{rounded_lat}:{rounded_lng}"
 
