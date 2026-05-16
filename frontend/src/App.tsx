@@ -45,6 +45,7 @@ const defaultForm: FormState = {
 };
 
 type CuisineCategory = "indian" | "global" | "snack" | "drink" | "dessert" | "healthy";
+type FoodChoice = { label: string; query: string; category: CuisineCategory };
 
 const cuisineImages: Record<CuisineCategory, string> = {
   indian: "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?auto=format&fit=crop&w=500&q=80",
@@ -55,7 +56,7 @@ const cuisineImages: Record<CuisineCategory, string> = {
   healthy: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=500&q=80"
 };
 
-const foodChoices: Array<{ label: string; query: string; category: CuisineCategory }> = [
+const foodChoices: FoodChoice[] = [
   { label: "Biryani", query: "biryani", category: "indian" },
   { label: "Pizza", query: "pizza", category: "global" },
   { label: "Burgers", query: "burger", category: "snack" },
@@ -121,6 +122,49 @@ const foodChoices: Array<{ label: string; query: string; category: CuisineCatego
   { label: "Cloud Kitchen", query: "cloud kitchen", category: "global" }
 ];
 
+const famousCuisineProfiles: Array<{ match: string[]; queries: string[] }> = [
+  {
+    match: ["hyderabad", "telangana", "secunderabad"],
+    queries: ["hyderabadi", "biryani", "kebabs", "andhra meals", "mughlai", "tandoori", "shawarma", "dessert"]
+  },
+  {
+    match: ["mumbai", "maharashtra", "thane", "navi mumbai", "pune"],
+    queries: ["street food", "pav bhaji", "vada", "chaat", "sandwich", "momos", "dessert", "fast food"]
+  },
+  {
+    match: ["delhi", "new delhi", "gurugram", "gurgaon", "noida", "faridabad"],
+    queries: ["north indian", "mughlai", "tandoori", "kebabs", "chaat", "paratha", "rolls", "dessert"]
+  },
+  {
+    match: ["bengaluru", "bangalore", "karnataka", "mysuru", "mysore"],
+    queries: ["dosa", "idli", "south indian", "breakfast", "coffee", "biryani", "continental", "healthy bowl"]
+  },
+  {
+    match: ["chennai", "tamil nadu", "coimbatore", "madurai"],
+    queries: ["dosa", "idli", "south indian", "breakfast", "coffee", "seafood", "biryani", "dessert"]
+  },
+  {
+    match: ["kolkata", "west bengal", "howrah"],
+    queries: ["rolls", "street food", "mithai", "biryani", "chinese", "tea", "bakery", "dessert"]
+  },
+  {
+    match: ["ahmedabad", "gujarat", "surat", "vadodara"],
+    queries: ["pure veg", "thali", "street food", "chaat", "breakfast", "mithai", "tea", "dessert"]
+  },
+  {
+    match: ["jaipur", "rajasthan", "jodhpur", "udaipur"],
+    queries: ["thali", "north indian", "pure veg", "street food", "mithai", "tea", "paratha", "dessert"]
+  },
+  {
+    match: ["lucknow", "uttar pradesh", "kanpur", "varanasi"],
+    queries: ["kebabs", "mughlai", "biryani", "north indian", "chaat", "mithai", "tea", "paratha"]
+  },
+  {
+    match: ["kochi", "kerala", "thiruvananthapuram", "trivandrum"],
+    queries: ["south indian", "seafood", "breakfast", "tea", "coffee", "biryani", "pure veg", "dessert"]
+  }
+];
+
 const featuredImage =
   "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=1200&q=80";
 
@@ -165,24 +209,31 @@ function App() {
     return `${results.length} places found for ${searchedQuery} near ${locationLabel}`;
   }, [locationLabel, results.length, searchedQuery]);
 
+  const famousCuisineQueries = useMemo(() => getFamousCuisineQueries(locationLabel), [locationLabel]);
+
+  const rankedFoodChoices = useMemo(
+    () => rankFoodChoicesForLocation(foodChoices, famousCuisineQueries),
+    [famousCuisineQueries]
+  );
+
   const visibleCuisines = useMemo(() => {
     const search = cuisineSearch.trim().toLowerCase();
     const filtered = search
-      ? foodChoices.filter((choice) => (
+      ? rankedFoodChoices.filter((choice) => (
           choice.label.toLowerCase().includes(search) ||
           choice.query.toLowerCase().includes(search) ||
           choice.category.includes(search)
         ))
-      : foodChoices;
+      : rankedFoodChoices;
 
     const visible = filtered.slice(0, 12);
-    const selected = foodChoices.find((choice) => choice.query === form.query);
+    const selected = rankedFoodChoices.find((choice) => choice.query === form.query);
     if (selected && !visible.some((choice) => choice.query === selected.query)) {
       return [selected, ...visible.slice(0, 11)];
     }
 
     return visible;
-  }, [cuisineSearch, form.query]);
+  }, [cuisineSearch, form.query, rankedFoodChoices]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -339,8 +390,8 @@ function App() {
           <form className="search-form" onSubmit={handleSubmit}>
             <section className="food-picker" aria-label="Popular food choices">
               <div className="section-heading">
-                <span>Cuisine</span>
-                <strong>{foodChoices.length} choices</strong>
+                <span>{famousCuisineQueries.length ? "Famous nearby" : "Cuisine"}</span>
+                <strong>{famousCuisineQueries.length ? locationLabel : `${foodChoices.length} choices`}</strong>
               </div>
               <div className="input-wrap cuisine-filter">
                 <Search size={18} aria-hidden="true" />
@@ -536,6 +587,26 @@ function formatLocationLabel(label: string) {
     .replace(/\s*,?\s*India$/i, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function getFamousCuisineQueries(locationLabel: string) {
+  const normalized = locationLabel.toLowerCase();
+  const profile = famousCuisineProfiles.find((item) => item.match.some((term) => normalized.includes(term)));
+  return profile?.queries ?? [];
+}
+
+function rankFoodChoicesForLocation(choices: FoodChoice[], famousQueries: string[]) {
+  if (famousQueries.length === 0) {
+    return choices;
+  }
+
+  const queryRank = new Map(famousQueries.map((query, index) => [query, index]));
+  const featured = famousQueries
+    .map((query) => choices.find((choice) => choice.query === query))
+    .filter((choice): choice is FoodChoice => Boolean(choice));
+  const remaining = choices.filter((choice) => !queryRank.has(choice.query));
+
+  return [...featured, ...remaining];
 }
 
 function RestaurantCard({
