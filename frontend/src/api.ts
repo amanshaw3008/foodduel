@@ -110,7 +110,7 @@ export type LocationLookupResponse = {
   source: string;
 };
 
-const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
+const apiBase = import.meta.env.VITE_API_BASE_URL ?? "https://foodduel.onrender.com";
 
 export function apiAssetUrl(path?: string | null) {
   if (!path) {
