@@ -51,6 +51,21 @@ async def test_compare_invalid_coords():
 
 
 @pytest.mark.asyncio
+async def test_vercel_origin_is_allowed_by_cors():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.options(
+            "/api/compare",
+            headers={
+                "Origin": "https://foodduel.vercel.app",
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+
+    assert resp.status_code == 200
+    assert resp.headers["access-control-allow-origin"] == "https://foodduel.vercel.app"
+
+
+@pytest.mark.asyncio
 async def test_lookup_pincode_basic():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.get("/api/location/pincode/500081")

@@ -6,7 +6,11 @@ class Settings(BaseSettings):
     # App
     APP_ENV: str = "development"
     DEBUG: bool = True
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "https://yourdomain.com"]
+    ALLOWED_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "https://foodduel.vercel.app",
+        "https://foodduel.onrender.com",
+    ]
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
