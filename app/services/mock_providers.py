@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Union
 
 from app.models.schemas import (
     CartCompareRequest,
@@ -264,7 +264,7 @@ mock_zomato_provider = MockFoodProvider(
 mock_providers: tuple[MockFoodProvider, ...] = (mock_swiggy_provider, mock_zomato_provider)
 
 
-def get_mock_provider(provider_id: Platform | str) -> Optional[MockFoodProvider]:
+def get_mock_provider(provider_id: Union[Platform, str]) -> Optional[MockFoodProvider]:
     normalized = provider_id.value if isinstance(provider_id, Platform) else provider_id
     return next((provider for provider in mock_providers if provider.id.value == normalized), None)
 
