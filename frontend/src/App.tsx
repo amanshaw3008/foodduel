@@ -46,6 +46,7 @@ const defaultForm: FormState = {
 
 type CuisineCategory = "indian" | "global" | "snack" | "drink" | "dessert" | "healthy";
 type FoodChoice = { label: string; query: string; category: CuisineCategory };
+const HOMEPAGE_CUISINE_LIMIT = 10;
 
 const cuisineImages: Record<CuisineCategory, string> = {
   indian: "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?auto=format&fit=crop&w=500&q=80",
@@ -100,6 +101,7 @@ const foodChoices: FoodChoice[] = [
   { label: "Chaat", query: "chaat", category: "snack" },
   { label: "Pav Bhaji", query: "pav bhaji", category: "snack" },
   { label: "Samosa", query: "samosa", category: "snack" },
+  { label: "Kachori", query: "kachori", category: "snack" },
   { label: "Bakery", query: "bakery", category: "dessert" },
   { label: "Cakes", query: "cakes", category: "dessert" },
   { label: "Ice Cream", query: "ice cream", category: "dessert" },
@@ -119,49 +121,72 @@ const foodChoices: FoodChoice[] = [
   { label: "Barbecue", query: "barbecue", category: "global" },
   { label: "Steak", query: "steak", category: "global" },
   { label: "Fast Food", query: "fast food", category: "snack" },
-  { label: "Cloud Kitchen", query: "cloud kitchen", category: "global" }
+  { label: "Cloud Kitchen", query: "cloud kitchen", category: "global" },
+  { label: "Mandi", query: "mandi", category: "global" },
+  { label: "Haleem", query: "haleem", category: "indian" },
+  { label: "Irani Chai", query: "irani chai", category: "drink" },
+  { label: "Beverages", query: "beverages", category: "drink" },
+  { label: "Boba Tea", query: "boba tea", category: "drink" },
+  { label: "Bengali", query: "bengali", category: "indian" },
+  { label: "Gujarati", query: "gujarati", category: "indian" },
+  { label: "Rajasthani", query: "rajasthani", category: "indian" },
+  { label: "Punjabi", query: "punjabi", category: "indian" },
+  { label: "Kerala", query: "kerala food", category: "indian" },
+  { label: "Tamil", query: "tamil food", category: "indian" },
+  { label: "Bengali Sweets", query: "bengali sweets", category: "dessert" },
+  { label: "Falooda", query: "falooda", category: "dessert" },
+  { label: "Bowl Meals", query: "bowl meals", category: "healthy" },
+  { label: "Vegan", query: "vegan", category: "healthy" },
+  { label: "Keto", query: "keto", category: "healthy" },
+  { label: "Soups", query: "soups", category: "healthy" },
+  { label: "Burritos", query: "burrito", category: "global" },
+  { label: "Ramen", query: "ramen", category: "global" },
+  { label: "Dim Sum", query: "dim sum", category: "global" },
+  { label: "Burrito Bowls", query: "burrito bowl", category: "healthy" },
+  { label: "Gourmet", query: "gourmet", category: "global" },
+  { label: "Cafe", query: "cafe", category: "drink" }
 ];
 
 const famousCuisineProfiles: Array<{ match: string[]; queries: string[] }> = [
   {
     match: ["hyderabad", "telangana", "secunderabad"],
-    queries: ["hyderabadi", "biryani", "kebabs", "andhra meals", "mughlai", "tandoori", "shawarma", "dessert"]
+    queries: ["hyderabadi", "biryani", "haleem", "irani chai", "mandi", "kebabs", "andhra meals", "mughlai", "tandoori", "shawarma"]
   },
   {
     match: ["mumbai", "maharashtra", "thane", "navi mumbai", "pune"],
-    queries: ["street food", "pav bhaji", "vada", "chaat", "sandwich", "momos", "dessert", "fast food"]
+    queries: ["street food", "pav bhaji", "vada", "chaat", "sandwich", "bowl meals", "momos", "dessert", "fast food", "cafe"]
   },
   {
     match: ["delhi", "new delhi", "gurugram", "gurgaon", "noida", "faridabad"],
-    queries: ["north indian", "mughlai", "tandoori", "kebabs", "chaat", "paratha", "rolls", "dessert"]
+    queries: ["north indian", "punjabi", "mughlai", "tandoori", "kebabs", "chaat", "paratha", "rolls", "dessert", "cafe"]
   },
   {
     match: ["bengaluru", "bangalore", "karnataka", "mysuru", "mysore"],
-    queries: ["dosa", "idli", "south indian", "breakfast", "coffee", "biryani", "continental", "healthy bowl"]
+    queries: ["dosa", "idli", "south indian", "breakfast", "coffee", "biryani", "continental", "healthy bowl", "vegan", "cafe"]
   },
   {
     match: ["chennai", "tamil nadu", "coimbatore", "madurai"],
-    queries: ["dosa", "idli", "south indian", "breakfast", "coffee", "seafood", "biryani", "dessert"]
+    queries: ["dosa", "idli", "south indian", "tamil food", "breakfast", "coffee", "seafood", "biryani", "dessert", "tea"]
   },
   {
     match: ["kolkata", "west bengal", "howrah"],
-    queries: ["rolls", "street food", "mithai", "biryani", "chinese", "tea", "bakery", "dessert"]
+    queries: ["rolls", "street food", "bengali", "bengali sweets", "mithai", "biryani", "chinese", "tea", "bakery", "dessert"]
   },
   {
     match: ["ahmedabad", "gujarat", "surat", "vadodara"],
-    queries: ["pure veg", "thali", "street food", "chaat", "breakfast", "mithai", "tea", "dessert"]
+    queries: ["gujarati", "pure veg", "thali", "street food", "chaat", "breakfast", "mithai", "tea", "dessert", "falooda"]
   },
   {
     match: ["jaipur", "rajasthan", "jodhpur", "udaipur"],
-    queries: ["thali", "north indian", "pure veg", "street food", "mithai", "tea", "paratha", "dessert"]
+    queries: ["rajasthani", "thali", "north indian", "pure veg", "street food", "mithai", "tea", "paratha", "dessert", "kachori"]
   },
   {
     match: ["lucknow", "uttar pradesh", "kanpur", "varanasi"],
-    queries: ["kebabs", "mughlai", "biryani", "north indian", "chaat", "mithai", "tea", "paratha"]
+    queries: ["kebabs", "mughlai", "biryani", "north indian", "chaat", "mithai", "tea", "paratha", "street food", "dessert"]
   },
   {
     match: ["kochi", "kerala", "thiruvananthapuram", "trivandrum"],
-    queries: ["south indian", "seafood", "breakfast", "tea", "coffee", "biryani", "pure veg", "dessert"]
+    queries: ["kerala food", "south indian", "seafood", "breakfast", "tea", "coffee", "biryani", "pure veg", "dessert", "juice"]
   }
 ];
 
@@ -226,10 +251,10 @@ function App() {
         ))
       : rankedFoodChoices;
 
-    const visible = filtered.slice(0, 12);
+    const visible = filtered.slice(0, HOMEPAGE_CUISINE_LIMIT);
     const selected = rankedFoodChoices.find((choice) => choice.query === form.query);
     if (selected && !visible.some((choice) => choice.query === selected.query)) {
-      return [selected, ...visible.slice(0, 11)];
+      return [selected, ...visible.slice(0, HOMEPAGE_CUISINE_LIMIT - 1)];
     }
 
     return visible;
@@ -479,7 +504,7 @@ function App() {
                       setForm({ ...form, pincode: event.target.value.replace(/\D/g, "") });
                       setActiveLocation(null);
                     }}
-                    placeholder="500081"
+                    placeholder="Enter PIN code"
                   />
                 </div>
               </label>
