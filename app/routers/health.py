@@ -20,7 +20,21 @@ async def health():
         "status": "ok",
         "env": settings.APP_ENV,
         "redis": "connected" if redis_ok else "unavailable",
-        "swiggy_api": "configured" if settings.SWIGGY_API_KEY else "pending",
+        "swiggy_api": "configured" if settings.SWIGGY_COOKIE else "pending",
         "zomato_api": "configured" if settings.ZOMATO_API_KEY else "pending",
         "google_places": "configured" if settings.GOOGLE_PLACES_API_KEY else "not set",
     }
+
+
+@router.delete("/cache/clear")
+async def clear_cache():
+    redis = get_redis()
+    if not redis:
+        return {"status": "Redis not connected"}
+    try:
+        keys = await redis.keys("foodduel:*")
+        if keys:
+            await redis.delete(*keys)
+        return {"status": "ok", "cleared": len(keys)}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
