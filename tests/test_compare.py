@@ -2,6 +2,7 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from app.main import app
+from app.core.config import settings
 from app.routers import photos
 from app.services import google_places
 
@@ -199,7 +200,8 @@ async def test_providers_endpoint_lists_mock_providers():
     assert resp.status_code == 200
     data = resp.json()
     assert {provider["id"] for provider in data} == {"swiggy", "zomato"}
-    assert all(provider["mode"] == "mock" for provider in data)
+    expected_mode = "mock" if settings.USE_MOCK_PROVIDERS else "official"
+    assert all(provider["mode"] == expected_mode for provider in data)
 
 
 @pytest.mark.asyncio

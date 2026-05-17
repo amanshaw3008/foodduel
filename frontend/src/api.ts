@@ -134,10 +134,13 @@ export async function compareRestaurants(params: {
     query: params.query,
     lat: String(params.lat),
     lng: String(params.lng),
-    radius: String(params.radius)
+    radius: String(params.radius),
+    nocache: "true"
   });
 
-  const response = await fetch(`${apiBase}/api/compare?${search.toString()}`);
+  const response = await fetch(`${apiBase}/api/compare?${search.toString()}`, {
+    cache: "no-store"
+  });
 
   if (!response.ok) {
     const message = response.status === 422
