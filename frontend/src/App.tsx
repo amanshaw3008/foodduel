@@ -16,6 +16,7 @@ import {
 import {
   apiAssetUrl,
   compareRestaurants,
+  fetchProviderMenu,
   fetchRestaurantMenu,
   lookupPincode,
   PlatformListing,
@@ -205,6 +206,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [menuByKey, setMenuByKey] = useState<Record<string, RestaurantMenuResponse>>({});
+  const [providerMenuByKey, setProviderMenuByKey] = useState<
+    Record<string, Partial<Record<"swiggy" | "zomato", RestaurantMenuResponse>>>
+  >({});
   const [menuLoadingKey, setMenuLoadingKey] = useState("");
   const [menuError, setMenuError] = useState("");
   const [selectedRestaurant, setSelectedRestaurant] = useState<UnifiedRestaurant | null>(null);
@@ -308,12 +312,43 @@ function App() {
 
     setMenuLoadingKey(menuKey);
     try {
-      const menu = await fetchRestaurantMenu({
+      const menuRequest = fetchRestaurantMenu({
         placeId: restaurant.google_place_id,
         restaurantName: restaurant.name,
         query: searchedQuery || form.query
       });
+      const providerRequests: Array<Promise<{ provider: "swiggy" | "zomato"; menu: RestaurantMenuResponse }>> = [];
+      if (restaurant.swiggy?.restaurant_id) {
+        providerRequests.push(
+          fetchProviderMenu({
+            providerId: "swiggy",
+            restaurantId: restaurant.swiggy.restaurant_id
+          }).then((menu) => ({ provider: "swiggy", menu }))
+        );
+      }
+      if (restaurant.zomato?.restaurant_id) {
+        providerRequests.push(
+          fetchProviderMenu({
+            providerId: "zomato",
+            restaurantId: restaurant.zomato.restaurant_id
+          }).then((menu) => ({ provider: "zomato", menu }))
+        );
+      }
+
+      const [menu, providerResults] = await Promise.all([
+        menuRequest,
+        Promise.allSettled(providerRequests)
+      ]);
+
+      const providerMenus: Partial<Record<"swiggy" | "zomato", RestaurantMenuResponse>> = {};
+      for (const result of providerResults) {
+        if (result.status === "fulfilled") {
+          providerMenus[result.value.provider] = result.value.menu;
+        }
+      }
+
       setMenuByKey((current) => ({ ...current, [menuKey]: menu }));
+      setProviderMenuByKey((current) => ({ ...current, [menuKey]: providerMenus }));
     } catch (err) {
       setMenuError(err instanceof Error ? err.message : "Could not fetch menu.");
     } finally {
@@ -569,6 +604,7 @@ function App() {
             <RestaurantDetailPage
               restaurant={selectedRestaurant}
               menu={menuByKey[getRestaurantKey(selectedRestaurant)]}
+              providerMenus={providerMenuByKey[getRestaurantKey(selectedRestaurant)]}
               isMenuLoading={menuLoadingKey === getRestaurantKey(selectedRestaurant)}
               menuError={menuError}
               onBack={() => setSelectedRestaurant(null)}
@@ -722,12 +758,14 @@ function RestaurantCard({
 function RestaurantDetailPage({
   restaurant,
   menu,
+  providerMenus,
   isMenuLoading,
   menuError,
   onBack
 }: {
   restaurant: UnifiedRestaurant;
   menu?: RestaurantMenuResponse;
+  providerMenus?: Partial<Record<"swiggy" | "zomato", RestaurantMenuResponse>>;
   isMenuLoading: boolean;
   menuError: string;
   onBack: () => void;
@@ -737,6 +775,7 @@ function RestaurantDetailPage({
   );
   const cheaper = restaurant.cheaper_platform;
   const groupedMenu = groupMenuItems(menu);
+  const hasProviderMenus = Boolean(providerMenus?.swiggy || providerMenus?.zomato);
 
   return (
     <article className="restaurant-detail-page">
@@ -778,10 +817,10 @@ function RestaurantDetailPage({
       <section className="full-menu-section">
         <div className="menu-header">
           <div>
-            <h3>Full menu</h3>
-            <p>{menu?.source === "estimated_preview" ? "Estimated preview for app testing" : "Provider menu"}</p>
+            <h3>Provider menus</h3>
+            <p>Swiggy and Zomato menus shown together for quick comparison.</p>
           </div>
-          {menu && <span>{menu.items.length} items</span>}
+          {hasProviderMenus && <span>{providerMenus?.swiggy ? "Swiggy" : ""}{providerMenus?.swiggy && providerMenus?.zomato ? " + " : ""}{providerMenus?.zomato ? "Zomato" : ""}</span>}
         </div>
 
         {isMenuLoading && (
@@ -793,8 +832,31 @@ function RestaurantDetailPage({
 
         {menuError && <p className="menu-note error">{menuError}</p>}
 
+        {!isMenuLoading && !menuError && (
+          <div className="provider-menu-grid">
+            <ProviderMenuSection
+              label="Swiggy menu"
+              menu={providerMenus?.swiggy}
+              listing={restaurant.swiggy}
+            />
+            <ProviderMenuSection
+              label="Zomato menu"
+              menu={providerMenus?.zomato}
+              listing={restaurant.zomato}
+            />
+          </div>
+        )}
+
         {!isMenuLoading && !menuError && menu && (
-          <div className="menu-category-list">
+          <div className="estimated-menu-block">
+            <div className="menu-header compact-menu-header">
+              <div>
+                <h3>Estimated full menu</h3>
+                <p>{menu.source === "estimated_preview" ? "Cuisine-aware preview for app testing" : "Provider menu"}</p>
+              </div>
+              <span>{menu.items.length} items</span>
+            </div>
+            <div className="menu-category-list">
             {groupedMenu.map(([category, items]) => (
               <section className="menu-category" key={category}>
                 <h4>{category}</h4>
@@ -814,12 +876,79 @@ function RestaurantDetailPage({
                 </div>
               </section>
             ))}
+            </div>
           </div>
         )}
 
         {menu?.disclaimer && <p className="menu-note">{menu.disclaimer}</p>}
       </section>
     </article>
+  );
+}
+
+function ProviderMenuSection({
+  label,
+  menu,
+  listing
+}: {
+  label: string;
+  menu?: RestaurantMenuResponse;
+  listing?: PlatformListing | null;
+}) {
+  if (!listing?.restaurant_id) {
+    return (
+      <section className="provider-menu-panel muted">
+        <div className="menu-header compact-menu-header">
+          <div>
+            <h3>{label}</h3>
+            <p>Live provider match pending.</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!menu) {
+    return (
+      <section className="provider-menu-panel muted">
+        <div className="menu-header compact-menu-header">
+          <div>
+            <h3>{label}</h3>
+            <p>Menu not available yet.</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="provider-menu-panel">
+      <div className="menu-header compact-menu-header">
+        <div>
+          <h3>{label}</h3>
+          <p>{listing.delivery_time_minutes ? `${listing.delivery_time_minutes} min` : "Time soon"} · ₹{listing.delivery_fee ?? "fee soon"}</p>
+        </div>
+        <span>{menu.items.length} items</span>
+      </div>
+
+      <div className="menu-list">
+        {menu.items.map((item) => (
+          <div className="menu-item full-menu-item" key={`${label}-${item.category}-${item.name}`}>
+            <div>
+              <strong>{item.name}</strong>
+              <span>
+                {item.category}
+                {item.is_veg ? " · Veg" : " · Non-veg"}
+                {item.is_popular ? " · Popular" : ""}
+              </span>
+            </div>
+            <b>₹{Math.round(item.price)}</b>
+          </div>
+        ))}
+      </div>
+
+      {menu.disclaimer && <p className="menu-note">{menu.disclaimer}</p>}
+    </section>
   );
 }
 
