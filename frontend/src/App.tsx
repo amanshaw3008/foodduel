@@ -812,6 +812,19 @@ function PlatformPanel({
 
   const isOpen = listing.operating_hours?.is_open_now;
   const hasDeliveryFee = typeof listing.delivery_fee === "number";
+  const hasLiveMatch = Boolean(listing.restaurant_id);
+
+  if (!hasLiveMatch) {
+    return (
+      <section className="platform-panel muted">
+        <div className="platform-title">
+          <h4>{label}</h4>
+          <span>Live match pending</span>
+        </div>
+        <p>No live {label} listing matched yet.</p>
+      </section>
+    );
+  }
 
   return (
     <section className={cheaper ? "platform-panel winner" : "platform-panel"}>
