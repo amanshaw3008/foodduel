@@ -52,6 +52,36 @@ async def test_compare_mock_mode_returns_provider_ids_and_fees():
 
 
 @pytest.mark.asyncio
+async def test_compare_mock_mode_returns_location_specific_restaurants():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        bhubaneswar = await client.get("/api/compare", params={
+            "query": "biryani",
+            "lat": 20.2352035,
+            "lng": 85.8340168,
+            "nocache": True,
+        })
+        bengaluru = await client.get("/api/compare", params={
+            "query": "dosa",
+            "lat": 12.9716,
+            "lng": 77.5946,
+            "nocache": True,
+        })
+        mumbai = await client.get("/api/compare", params={
+            "query": "dessert",
+            "lat": 19.0760,
+            "lng": 72.8777,
+            "nocache": True,
+        })
+
+    assert bhubaneswar.status_code == 200
+    assert bengaluru.status_code == 200
+    assert mumbai.status_code == 200
+    assert any("Bhubaneswar" in item["address"] for item in bhubaneswar.json()["results"])
+    assert any("Bengaluru" in item["address"] for item in bengaluru.json()["results"])
+    assert any("Mumbai" in item["address"] for item in mumbai.json()["results"])
+
+
+@pytest.mark.asyncio
 async def test_compare_missing_params():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.get("/api/compare", params={"query": "pizza"})
