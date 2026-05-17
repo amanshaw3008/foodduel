@@ -1,26 +1,29 @@
 :root {
-  color: #151d1f;
-  background: #f6f8f4;
+  color: #282c3f;
+  background: #f7f7f7;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+    Arial, "Helvetica Neue", Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --ink: #151d1f;
-  --muted: #657074;
-  --soft: #eef3ee;
-  --line: #d9e0dc;
+  --ink: #282c3f;
+  --text: #3d4152;
+  --muted: #686b78;
+  --faint: #93959f;
+  --line: #e9e9eb;
   --panel: #ffffff;
-  --panel-tint: #f9fbf7;
-  --green: #087b5b;
-  --green-soft: #dff5ec;
-  --coral: #d85b4a;
-  --gold: #b6801b;
-  --cyan: #1c7d8c;
-  --violet: #6357a6;
-  --shadow: 0 24px 70px rgba(25, 39, 36, 0.12);
-  --soft-shadow: 0 14px 36px rgba(25, 39, 36, 0.08);
+  --page: #f7f7f7;
+  --orange: #fc8019;
+  --orange-dark: #e46f0e;
+  --orange-soft: #fff0e3;
+  --green: #48c479;
+  --green-soft: #e9f8ef;
+  --blue: #3f78e0;
+  --gold: #db7c38;
+  --danger: #d53d4c;
+  --shadow: 0 12px 34px rgba(40, 44, 63, 0.08);
+  --hover-shadow: 0 18px 46px rgba(40, 44, 63, 0.14);
 }
 
 * {
@@ -30,6 +33,7 @@
 body {
   margin: 0;
   min-width: 320px;
+  background: var(--page);
 }
 
 button,
@@ -44,39 +48,42 @@ button {
 
 .app-shell {
   min-height: 100vh;
-  padding: 22px;
-  background:
-    linear-gradient(120deg, rgba(8, 123, 91, 0.12), transparent 42%),
-    linear-gradient(300deg, rgba(216, 91, 74, 0.1), transparent 38%),
-    #f6f8f4;
+  padding: 0 24px 28px;
+  background: var(--page);
 }
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 8;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  max-width: 1480px;
-  margin: 0 auto 18px;
-  padding: 12px 14px;
-  border: 1px solid rgba(21, 29, 31, 0.08);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 10px 30px rgba(25, 39, 36, 0.07);
+  max-width: 1500px;
+  margin: 0 auto 22px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  background: rgba(247, 247, 247, 0.96);
   backdrop-filter: blur(18px);
 }
 
 .topbar-brand {
   display: flex;
   align-items: center;
+  min-width: 0;
   gap: 12px;
 }
 
 .topbar-brand strong {
   display: block;
+  overflow: hidden;
   color: var(--ink);
   font-size: 1rem;
-  line-height: 1.2;
+  font-weight: 800;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .topbar-pills {
@@ -94,22 +101,22 @@ button {
 .saving-badge {
   border-radius: 999px;
   font-size: 0.76rem;
-  font-weight: 850;
+  font-weight: 800;
   line-height: 1;
   white-space: nowrap;
 }
 
 .topbar-pills span {
   padding: 8px 10px;
-  color: var(--green);
-  background: var(--green-soft);
+  color: var(--orange-dark);
+  background: var(--orange-soft);
 }
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(320px, 410px) minmax(0, 1fr);
-  gap: 18px;
-  max-width: 1480px;
+  grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
+  gap: 22px;
+  max-width: 1500px;
   margin: 0 auto;
 }
 
@@ -120,16 +127,17 @@ button {
 
 .search-panel {
   position: sticky;
-  top: 22px;
+  top: 82px;
   align-self: start;
-  max-height: calc(100vh - 44px);
+  max-height: calc(100vh - 104px);
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 20px;
-  border: 1px solid rgba(21, 29, 31, 0.08);
+  padding: 22px;
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--panel);
   box-shadow: var(--shadow);
+  scrollbar-color: #cfcfd3 transparent;
   scrollbar-width: thin;
 }
 
@@ -147,14 +155,14 @@ button {
   place-items: center;
   border-radius: 8px;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--green), var(--cyan));
-  box-shadow: 0 12px 26px rgba(8, 123, 91, 0.22);
+  background: var(--orange);
+  box-shadow: 0 12px 24px rgba(252, 128, 25, 0.24);
 }
 
 .eyebrow {
   margin: 0 0 6px;
-  color: var(--coral);
-  font-size: 0.74rem;
+  color: var(--orange);
+  font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -171,8 +179,10 @@ p {
 h1 {
   max-width: 13ch;
   margin-bottom: 0;
-  font-size: 2.25rem;
-  line-height: 1.02;
+  color: var(--ink);
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1.03;
 }
 
 .search-form {
@@ -193,21 +203,19 @@ h1 {
 }
 
 .section-heading strong {
-  overflow: hidden;
-  max-width: 16ch;
-  color: var(--green);
-  text-overflow: ellipsis;
-  text-transform: capitalize;
-  white-space: nowrap;
+  flex: 0 0 auto;
+  color: var(--orange-dark);
+  font-weight: 900;
 }
 
 .food-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 9px;
-  max-height: 300px;
+  gap: 10px;
+  max-height: 520px;
   overflow-y: auto;
-  padding: 3px;
+  padding: 2px 4px 2px 2px;
+  scrollbar-color: #cfcfd3 transparent;
   scrollbar-width: thin;
 }
 
@@ -215,12 +223,12 @@ h1 {
   position: relative;
   min-height: 92px;
   overflow: hidden;
-  border: 1px solid rgba(21, 29, 31, 0.1);
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0;
   color: #ffffff;
-  background: #25302f;
-  box-shadow: 0 10px 24px rgba(25, 39, 36, 0.12);
+  background: #222;
+  box-shadow: 0 8px 18px rgba(40, 44, 63, 0.1);
 }
 
 .cuisine-filter {
@@ -233,14 +241,14 @@ h1 {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 220ms ease, filter 220ms ease;
+  transition: transform 180ms ease, filter 180ms ease;
 }
 
 .food-tile::after {
   position: absolute;
   inset: 0;
   content: "";
-  background: linear-gradient(180deg, rgba(8, 13, 13, 0.08), rgba(8, 13, 13, 0.74));
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.7));
 }
 
 .food-tile span {
@@ -262,8 +270,8 @@ h1 {
 }
 
 .food-tile.active {
-  border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(8, 123, 91, 0.18);
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(252, 128, 25, 0.18);
 }
 
 label {
@@ -278,18 +286,24 @@ input,
 select {
   width: 100%;
   min-height: 48px;
-  border: 1px solid var(--line);
+  border: 1px solid #d4d5d9;
   border-radius: 8px;
   padding: 0 14px;
   color: var(--ink);
-  background: var(--panel);
+  background: #ffffff;
+  font-weight: 700;
   outline: none;
+}
+
+input::placeholder {
+  color: var(--faint);
+  font-weight: 700;
 }
 
 input:focus,
 select:focus {
-  border-color: var(--green);
-  box-shadow: 0 0 0 4px rgba(8, 123, 91, 0.14);
+  border-color: var(--orange);
+  box-shadow: 0 0 0 4px rgba(252, 128, 25, 0.14);
 }
 
 .input-wrap {
@@ -317,11 +331,11 @@ select:focus {
 .location-mode {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 7px;
   padding: 5px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--soft);
+  background: #f4f4f5;
 }
 
 .mode-button,
@@ -343,9 +357,9 @@ select:focus {
 }
 
 .mode-button.active {
-  color: var(--green);
-  background: var(--panel);
-  box-shadow: 0 8px 18px rgba(25, 39, 36, 0.08);
+  color: var(--orange-dark);
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(40, 44, 63, 0.08);
 }
 
 .live-location-box {
@@ -354,7 +368,7 @@ select:focus {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--panel-tint);
+  background: #fffaf4;
 }
 
 .live-location-box p {
@@ -368,20 +382,24 @@ select:focus {
   min-height: 52px;
   border: 0;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--green), var(--cyan));
-  box-shadow: 0 16px 32px rgba(8, 123, 91, 0.24);
+  background: var(--orange);
+  box-shadow: 0 14px 28px rgba(252, 128, 25, 0.25);
+}
+
+.primary-button:hover {
+  background: var(--orange-dark);
 }
 
 .primary-button:disabled {
   cursor: wait;
-  opacity: 0.7;
+  opacity: 0.72;
 }
 
 .secondary-button {
   min-height: 44px;
-  border: 1px solid rgba(8, 123, 91, 0.26);
-  color: var(--green);
-  background: var(--green-soft);
+  border: 1px solid rgba(252, 128, 25, 0.28);
+  color: var(--orange-dark);
+  background: var(--orange-soft);
 }
 
 .secondary-button:disabled {
@@ -392,10 +410,10 @@ select:focus {
 .error-message {
   margin: 18px 0 0;
   padding: 12px 14px;
-  border: 1px solid rgba(216, 91, 74, 0.28);
+  border: 1px solid rgba(213, 61, 76, 0.24);
   border-radius: 8px;
-  color: var(--coral);
-  background: rgba(216, 91, 74, 0.08);
+  color: var(--danger);
+  background: rgba(213, 61, 76, 0.08);
   font-weight: 800;
 }
 
@@ -414,7 +432,7 @@ select:focus {
 }
 
 .status-stack svg {
-  color: var(--cyan);
+  color: var(--green);
   flex: 0 0 auto;
 }
 
@@ -425,11 +443,11 @@ select:focus {
 
 .hero-strip {
   position: relative;
-  min-height: 286px;
+  min-height: 276px;
   overflow: hidden;
-  border: 1px solid rgba(21, 29, 31, 0.08);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: #1c2421;
+  background: #1f1f1f;
   box-shadow: var(--shadow);
 }
 
@@ -446,8 +464,8 @@ select:focus {
   inset: 0;
   content: "";
   background:
-    linear-gradient(90deg, rgba(9, 16, 16, 0.9), rgba(9, 16, 16, 0.26)),
-    linear-gradient(0deg, rgba(9, 16, 16, 0.32), transparent 58%);
+    linear-gradient(90deg, rgba(32, 25, 20, 0.86), rgba(32, 25, 20, 0.24)),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.26), transparent 56%);
 }
 
 .hero-copy {
@@ -455,8 +473,8 @@ select:focus {
   z-index: 1;
   display: grid;
   align-content: end;
-  min-height: 286px;
-  max-width: 720px;
+  min-height: 276px;
+  max-width: 700px;
   padding: 32px;
   color: #ffffff;
 }
@@ -464,15 +482,15 @@ select:focus {
 .hero-copy h2 {
   margin-bottom: 14px;
   font-size: 3rem;
-  line-height: 1.03;
+  font-weight: 900;
+  line-height: 1.04;
 }
 
 .hero-copy span {
   width: fit-content;
   padding: 8px 10px;
-  color: #f7fbf9;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #ffffff;
+  background: rgba(252, 128, 25, 0.88);
 }
 
 .insight-grid {
@@ -484,12 +502,12 @@ select:focus {
 .insight-card {
   display: grid;
   gap: 8px;
-  min-height: 96px;
+  min-height: 92px;
   padding: 16px;
-  border: 1px solid rgba(21, 29, 31, 0.08);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: var(--soft-shadow);
+  background: #ffffff;
+  box-shadow: var(--shadow);
 }
 
 .insight-card span {
@@ -513,13 +531,13 @@ select:focus {
 .restaurant-card {
   overflow: hidden;
   display: grid;
-  gap: 16px;
+  gap: 15px;
   padding: 0 0 18px;
-  border: 1px solid rgba(21, 29, 31, 0.08);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: var(--soft-shadow);
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(40, 44, 63, 0.06);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
 }
 
 .clickable-card {
@@ -527,12 +545,13 @@ select:focus {
 }
 
 .clickable-card:hover {
-  box-shadow: var(--shadow);
+  border-color: #d4d5d9;
+  box-shadow: var(--hover-shadow);
   transform: translateY(-2px);
 }
 
 .clickable-card:focus-visible {
-  outline: 3px solid rgba(8, 123, 91, 0.32);
+  outline: 3px solid rgba(252, 128, 25, 0.32);
   outline-offset: 3px;
 }
 
@@ -540,7 +559,7 @@ select:focus {
   width: 100%;
   aspect-ratio: 16 / 8;
   object-fit: cover;
-  background: #dfe7e2;
+  background: #eef0f2;
 }
 
 .restaurant-head {
@@ -553,7 +572,9 @@ select:focus {
 
 .restaurant-head h3 {
   margin-bottom: 8px;
+  color: var(--ink);
   font-size: 1.26rem;
+  font-weight: 900;
   line-height: 1.16;
 }
 
@@ -578,7 +599,7 @@ select:focus {
   min-height: 30px;
   gap: 4px;
   padding: 7px 10px;
-  color: var(--green);
+  color: #0f8a45;
   background: var(--green-soft);
 }
 
@@ -592,7 +613,7 @@ select:focus {
 .cuisine-row span {
   padding: 7px 9px;
   color: var(--muted);
-  background: var(--soft);
+  background: #f2f3f5;
 }
 
 .platform-grid {
@@ -607,17 +628,17 @@ select:focus {
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--panel);
+  background: #ffffff;
 }
 
 .platform-panel.winner {
-  border-color: rgba(8, 123, 91, 0.38);
+  border-color: rgba(72, 196, 121, 0.45);
   background: var(--green-soft);
 }
 
 .platform-panel.muted {
   color: var(--muted);
-  background: var(--panel-tint);
+  background: #f7f7f7;
 }
 
 .platform-panel p {
@@ -637,14 +658,16 @@ select:focus {
 
 .platform-title h4 {
   margin-bottom: 0;
+  color: var(--ink);
   font-size: 0.98rem;
+  font-weight: 900;
 }
 
 .platform-title span {
   flex: 0 0 auto;
   padding: 6px 8px;
-  color: var(--green);
-  background: rgba(8, 123, 91, 0.1);
+  color: #0f8a45;
+  background: #ffffff;
 }
 
 .metric-row {
@@ -668,7 +691,7 @@ select:focus {
 
 .discount {
   margin: 12px 0 0;
-  color: var(--green);
+  color: #0f8a45;
   font-size: 0.86rem;
   font-weight: 850;
 }
@@ -695,10 +718,10 @@ select:focus {
   display: grid;
   grid-template-columns: minmax(280px, 0.8fr) minmax(280px, 1fr);
   gap: 0;
-  border: 1px solid rgba(21, 29, 31, 0.08);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--panel);
-  box-shadow: var(--soft-shadow);
+  background: #ffffff;
+  box-shadow: var(--shadow);
 }
 
 .detail-hero img {
@@ -706,7 +729,7 @@ select:focus {
   height: 100%;
   min-height: 340px;
   object-fit: cover;
-  background: #dfe7e2;
+  background: #eef0f2;
 }
 
 .detail-hero > div {
@@ -718,7 +741,9 @@ select:focus {
 
 .detail-hero h2 {
   margin: 0;
-  font-size: 3.35rem;
+  color: var(--ink);
+  font-size: 3.1rem;
+  font-weight: 900;
   line-height: 1.02;
 }
 
@@ -745,10 +770,10 @@ select:focus {
   display: grid;
   gap: 18px;
   padding: 22px;
-  border: 1px solid rgba(21, 29, 31, 0.08);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: var(--soft-shadow);
+  background: #ffffff;
+  box-shadow: var(--shadow);
 }
 
 .provider-menu-grid {
@@ -762,14 +787,14 @@ select:focus {
   align-content: start;
   gap: 14px;
   padding: 16px;
-  border: 1px solid rgba(8, 123, 91, 0.18);
+  border: 1px solid var(--line);
   border-radius: 8px;
   background: #ffffff;
 }
 
 .provider-menu-panel.muted {
   color: var(--muted);
-  background: var(--panel-tint);
+  background: #f7f7f7;
 }
 
 .estimated-menu-block {
@@ -791,7 +816,9 @@ select:focus {
 .full-menu-section .menu-header h3,
 .menu-header h4 {
   margin: 0 0 5px;
+  color: var(--ink);
   font-size: 1.35rem;
+  font-weight: 900;
 }
 
 .menu-header p {
@@ -805,8 +832,8 @@ select:focus {
 .menu-header span {
   flex: 0 0 auto;
   padding: 7px 9px;
-  color: var(--green);
-  background: var(--green-soft);
+  color: var(--orange-dark);
+  background: var(--orange-soft);
 }
 
 .detail-loading {
@@ -836,6 +863,7 @@ select:focus {
   margin: 0;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--line);
+  color: var(--ink);
   font-size: 1rem;
 }
 
@@ -859,6 +887,7 @@ select:focus {
 }
 
 .menu-item strong {
+  color: var(--ink);
   line-height: 1.25;
 }
 
@@ -883,7 +912,7 @@ select:focus {
 .menu-note.error {
   padding-top: 0;
   border-top: 0;
-  color: var(--coral);
+  color: var(--danger);
   font-weight: 850;
 }
 
@@ -892,7 +921,7 @@ select:focus {
   gap: 14px;
   margin: 0 18px;
   padding: 16px;
-  border: 1px solid rgba(8, 123, 91, 0.18);
+  border: 1px solid var(--line);
   border-radius: 8px;
   background: #ffffff;
 }
@@ -908,10 +937,10 @@ select:focus {
   place-items: center;
   align-content: center;
   padding: 30px;
-  border: 1px dashed #b9c6bf;
+  border: 1px dashed #d4d5d9;
   border-radius: 8px;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.7);
+  background: #ffffff;
   text-align: center;
 }
 
@@ -948,6 +977,10 @@ select:focus {
     overflow: visible;
   }
 
+  .food-grid {
+    max-height: 620px;
+  }
+
   h1 {
     max-width: 18ch;
   }
@@ -959,11 +992,12 @@ select:focus {
 
 @media (max-width: 760px) {
   .app-shell {
-    padding: 12px;
+    padding: 0 12px 18px;
   }
 
   .topbar {
     display: grid;
+    padding: 12px 0;
   }
 
   .topbar-pills {
@@ -976,7 +1010,7 @@ select:focus {
 
   .hero-copy h2,
   .detail-hero h2 {
-    font-size: 2.2rem;
+    font-size: 2.15rem;
   }
 
   .detail-hero,
@@ -1005,6 +1039,10 @@ select:focus {
   .platform-grid,
   .insight-grid {
     grid-template-columns: 1fr;
+  }
+
+  .food-grid {
+    max-height: none;
   }
 
   .restaurant-head {

@@ -46,7 +46,7 @@ const defaultForm: FormState = {
 
 type CuisineCategory = "indian" | "global" | "snack" | "drink" | "dessert" | "healthy";
 type FoodChoice = { label: string; query: string; category: CuisineCategory };
-const HOMEPAGE_CUISINE_LIMIT = 10;
+const HOMEPAGE_CUISINE_LIMIT = 100;
 
 const cuisineImages: Record<CuisineCategory, string> = {
   indian: "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?auto=format&fit=crop&w=500&q=80",
@@ -452,13 +452,13 @@ function App() {
           </div>
           <div>
             <p className="eyebrow">FoodDuel</p>
-            <strong>Delivery intelligence cockpit</strong>
+            <strong>Compare restaurants, menus and delivery fees</strong>
           </div>
         </div>
         <div className="topbar-pills" aria-label="Product capabilities">
-          <span>Mock Swiggy + Zomato</span>
-          <span>Menu duel</span>
-          <span>Price radar</span>
+          <span>Fast search</span>
+          <span>Menu compare</span>
+          <span>Mock providers</span>
         </div>
       </header>
 
@@ -478,7 +478,7 @@ function App() {
             <section className="food-picker" aria-label="Popular food choices">
               <div className="section-heading">
                 <span>{famousCuisineQueries.length ? "Famous nearby" : "Cuisine"}</span>
-                <strong>{famousCuisineQueries.length ? locationLabel : `${foodChoices.length} choices`}</strong>
+                <strong>{cuisineSearch.trim() ? `${visibleCuisines.length} matches` : `${foodChoices.length} cuisines`}</strong>
               </div>
               <div className="input-wrap cuisine-filter">
                 <Search size={18} aria-hidden="true" />
