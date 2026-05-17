@@ -16,24 +16,21 @@ async def compare_restaurants(
     lat: float,
     lng: float,
     radius: int = 3000,
+    nocache: bool = False,
 ) -> Tuple[List[UnifiedRestaurant], bool]:
-    """
-    Main orchestrator. Fetches from Swiggy + Zomato concurrently,
-    falls back to Google Places, merges results, and caches.
 
-    Returns: (results, was_cached)
-    """
     cache_key = build_cache_key("compare", query, lat, lng)
 
-    # 1. Try cache first
-    cached = await get_cached(cache_key)
-    if cached:
-        logger.info(f"Cache HIT: {cache_key}")
-        return [UnifiedRestaurant(**r) for r in cached], True
+    # 1. Try cache first (unless nocache=true)
+    if not nocache:
+        cached = await get_cached(cache_key)
+        if cached:
+            logger.info(f"Cache HIT: {cache_key}")
+            return [UnifiedRestaurant(**r) for r in cached], True
 
     logger.info(f"Cache MISS: {cache_key} — fetching live data")
 
-    # 2. Fire all sources concurrently — don't wait for one before starting another
+    # 2. Fire all sources concurrently
     swiggy_task = asyncio.create_task(
         swiggy_service.search_restaurants(query, lat, lng, radius)
     )
@@ -46,10 +43,9 @@ async def compare_restaurants(
 
     swiggy_results, zomato_results, google_results = await asyncio.gather(
         swiggy_task, zomato_task, google_task,
-        return_exceptions=True,  # Don't fail if one source errors
+        return_exceptions=True,
     )
 
-    # Handle exceptions from gather (treat as empty lists)
     if isinstance(swiggy_results, Exception):
         logger.error(f"Swiggy task failed: {swiggy_results}")
         swiggy_results = []
@@ -78,34 +74,23 @@ def _merge_results(
     swiggy: List[PlatformListing],
     zomato: List[PlatformListing],
 ) -> List[UnifiedRestaurant]:
-    """
-    Merge Google Places base list with Swiggy and Zomato platform listings.
-    Matches by restaurant name (fuzzy) until we have common IDs from real APIs.
-    """
-    # Index Swiggy and Zomato by name for quick lookup
+
     swiggy_by_name = {s.name.lower(): s for s in swiggy}
     zomato_by_name = {z.name.lower(): z for z in zomato}
 
     merged = []
     for restaurant in google:
         name_key = restaurant.name.lower()
-
-        # Attach real platform listings if available, otherwise keep stubs
         if name_key in swiggy_by_name:
             restaurant.swiggy = swiggy_by_name[name_key]
         if name_key in zomato_by_name:
             restaurant.zomato = zomato_by_name[name_key]
-
         merged.append(restaurant)
 
     return merged
 
 
 def _compute_savings(restaurant: UnifiedRestaurant) -> UnifiedRestaurant:
-    """
-    Determine which platform is cheaper and by how much.
-    Only compares delivery fee for now; extend to include item price when APIs provide it.
-    """
     s_fee = restaurant.swiggy.delivery_fee if restaurant.swiggy else None
     z_fee = restaurant.zomato.delivery_fee if restaurant.zomato else None
 
