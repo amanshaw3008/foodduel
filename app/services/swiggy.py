@@ -3,6 +3,7 @@ import logging
 from typing import List, Optional
 from app.core.config import settings
 from app.models.schemas import PlatformListing, OperatingHours, Platform
+from app.services.mock_providers import mock_swiggy_provider
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,10 @@ class SwiggyService:
         self.is_available = bool(self.cookie)
 
     async def search_restaurants(self, query: str, lat: float, lng: float, radius: int = 3000) -> List[PlatformListing]:
+        if settings.USE_MOCK_PROVIDERS:
+            logger.info("Mock providers enabled — returning mock Swiggy listings")
+            return mock_swiggy_provider.search_restaurants(query, lat, lng, radius)
+
         if not self.is_available:
             logger.info("Swiggy cookie not set — skipping")
             return []

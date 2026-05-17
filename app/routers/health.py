@@ -23,6 +23,7 @@ async def health():
         "swiggy_api": "configured" if settings.SWIGGY_COOKIE else "pending",
         "zomato_api": "configured" if settings.ZOMATO_API_KEY else "pending",
         "google_places": "configured" if settings.GOOGLE_PLACES_API_KEY else "not set",
+        "mock_providers": "enabled" if settings.USE_MOCK_PROVIDERS else "disabled",
     }
 
 

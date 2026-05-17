@@ -3,9 +3,11 @@ import logging
 from typing import List, Tuple
 
 from app.models.schemas import UnifiedRestaurant, Platform, PlatformListing
+from app.core.config import settings
 from app.services.swiggy import swiggy_service
 from app.services.zomato import zomato_service
 from app.services.google_places import search_nearby_restaurants
+from app.services.mock_providers import mock_unified_restaurants
 from app.core.redis import get_cached, set_cached, build_cache_key
 
 logger = logging.getLogger(__name__)
@@ -29,6 +31,13 @@ async def compare_restaurants(
             return [UnifiedRestaurant(**r) for r in cached], True
 
     logger.info(f"Cache MISS: {cache_key} — fetching live data")
+
+    if settings.USE_MOCK_PROVIDERS:
+        unified = mock_unified_restaurants(query, lat, lng)
+        for restaurant in unified:
+            restaurant = _compute_savings(restaurant)
+        await set_cached(cache_key, [r.model_dump() for r in unified])
+        return unified, False
 
     # 2. Fire all sources concurrently
     swiggy_task = asyncio.create_task(

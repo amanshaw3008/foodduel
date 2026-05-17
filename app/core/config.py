@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     # Google Places (fallback until Swiggy/Zomato APIs approved)
     GOOGLE_PLACES_API_KEY: str = ""
-    USE_MOCK_PROVIDERS: bool = False
+    USE_MOCK_PROVIDERS: bool = True
 
     # Swiggy (fill once API access is granted)
     SWIGGY_API_KEY: str = ""

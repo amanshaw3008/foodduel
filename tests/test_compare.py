@@ -33,6 +33,25 @@ async def test_compare_basic():
 
 
 @pytest.mark.asyncio
+async def test_compare_mock_mode_returns_provider_ids_and_fees():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get("/api/compare", params={
+            "query": "biryani",
+            "lat": 20.2352035,
+            "lng": 85.8340168,
+            "nocache": True,
+        })
+
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["results"]
+    first = data["results"][0]
+    assert first["swiggy"]["restaurant_id"]
+    assert first["swiggy"]["delivery_time_minutes"]
+    assert isinstance(first["swiggy"]["delivery_fee"], float)
+
+
+@pytest.mark.asyncio
 async def test_compare_missing_params():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.get("/api/compare", params={"query": "pizza"})
