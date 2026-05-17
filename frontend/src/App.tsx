@@ -263,6 +263,22 @@ function App() {
     return visible;
   }, [cuisineSearch, form.query, rankedFoodChoices]);
 
+  const resultInsights = useMemo(() => {
+    const withSavings = results.filter((restaurant) => (restaurant.estimated_saving ?? 0) > 0);
+    const avgSaving = withSavings.length
+      ? Math.round(withSavings.reduce((total, restaurant) => total + (restaurant.estimated_saving ?? 0), 0) / withSavings.length)
+      : 0;
+    const swiggyWins = results.filter((restaurant) => restaurant.cheaper_platform === "swiggy").length;
+    const zomatoWins = results.filter((restaurant) => restaurant.cheaper_platform === "zomato").length;
+
+    return [
+      { label: "Restaurants", value: results.length ? String(results.length).padStart(2, "0") : "--" },
+      { label: "Avg saving", value: avgSaving ? `₹${avgSaving}` : "₹0" },
+      { label: "Swiggy wins", value: String(swiggyWins) },
+      { label: "Zomato wins", value: String(zomatoWins) }
+    ];
+  }, [results]);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await runCompare(form.query);
@@ -429,6 +445,23 @@ function App() {
 
   return (
     <main className="app-shell">
+      <header className="topbar">
+        <div className="topbar-brand">
+          <div className="brand-mark" aria-hidden="true">
+            <Utensils size={22} />
+          </div>
+          <div>
+            <p className="eyebrow">FoodDuel</p>
+            <strong>Delivery intelligence cockpit</strong>
+          </div>
+        </div>
+        <div className="topbar-pills" aria-label="Product capabilities">
+          <span>Mock Swiggy + Zomato</span>
+          <span>Menu duel</span>
+          <span>Price radar</span>
+        </div>
+      </header>
+
       <section className="workspace">
         <aside className="search-panel" aria-label="Restaurant search">
           <div className="brand-row">
@@ -600,6 +633,15 @@ function App() {
             </div>
           </div>
 
+          <div className="insight-grid" aria-label="Search result insights">
+            {resultInsights.map((item) => (
+              <div className="insight-card" key={item.label}>
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+              </div>
+            ))}
+          </div>
+
           {selectedRestaurant ? (
             <RestaurantDetailPage
               restaurant={selectedRestaurant}
@@ -727,6 +769,12 @@ function RestaurantCard({
             <span>{saving > 0 ? `${saving} saved on ${cheaper}` : "Same fee"}</span>
           </div>
         )}
+      </div>
+
+      <div className="cuisine-row" aria-label="Cuisines">
+        {(restaurant.swiggy?.cuisine ?? restaurant.zomato?.cuisine ?? []).slice(0, 3).map((cuisine) => (
+          <span key={cuisine}>{cuisine}</span>
+        ))}
       </div>
 
       <div className="platform-grid">
