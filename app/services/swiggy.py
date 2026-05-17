@@ -1,97 +1,96 @@
 import httpx
 import logging
-from typing import List, Optional
-
+from typing import List
 from app.core.config import settings
 from app.models.schemas import PlatformListing, OperatingHours, Platform
-from app.services.mock_providers import mock_swiggy_provider
 
 logger = logging.getLogger(__name__)
 
+SWIGGY_SEARCH_URL = "https://www.swiggy.com/dapi/restaurants/search/v3"
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "application/json",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Referer": "https://www.swiggy.com/",
+    "Origin": "https://www.swiggy.com",
+}
+
 
 class SwiggyService:
-    """
-    Swiggy API integration.
-
-    STATUS: Awaiting API access approval from Swiggy Builders Club.
-    Once approved, fill in SWIGGY_API_KEY and SWIGGY_BASE_URL in .env
-    and implement the methods below using their actual JSON response structure.
-
-    Docs: https://developer.swiggy.com (pending access)
-    """
-
     def __init__(self):
-        self.api_key = settings.SWIGGY_API_KEY
-        self.base_url = settings.SWIGGY_BASE_URL
-        self.is_available = bool(self.api_key)
+        self.cookie = settings.SWIGGY_COOKIE
+        self.is_available = bool(self.cookie)
 
-    async def search_restaurants(
-        self,
-        query: str,
-        lat: float,
-        lng: float,
-        radius: int = 3000,
-    ) -> List[PlatformListing]:
+    async def search_restaurants(self, query: str, lat: float, lng: float, radius: int = 3000) -> List[PlatformListing]:
         if not self.is_available:
-            if settings.USE_MOCK_PROVIDERS:
-                logger.info("Swiggy API key not set — returning mock Swiggy listings")
-                return mock_swiggy_provider.search_restaurants(query, lat, lng, radius)
-            logger.info("Swiggy API key not set — skipping Swiggy fetch")
+            logger.info("Swiggy cookie not set — skipping")
             return []
 
         try:
-            async with httpx.AsyncClient(timeout=8.0) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
-                    f"{self.base_url}/restaurants/search",
-                    headers={"Authorization": f"Bearer {self.api_key}"},
+                    SWIGGY_SEARCH_URL,
                     params={
-                        "query": query,
                         "lat": lat,
                         "lng": lng,
-                        "radius": radius,
+                        "str": query,
+                        "submitAction": "ENTER",
                     },
+                    headers={**HEADERS, "Cookie": self.cookie},
                 )
                 resp.raise_for_status()
                 data = resp.json()
 
-            # TODO: Replace with actual field mapping once you inspect the
-            # real JSON response from Swiggy's API.
-            # Use: print(json.dumps(data, indent=2)) on first successful call.
-            return [self._map_restaurant(r) for r in data.get("data", {}).get("restaurants", [])]
+            # Log raw response for inspection
+            import json
+            logger.info(f"Swiggy raw response keys: {list(data.keys())}")
 
-        except httpx.HTTPStatusError as e:
-            logger.error(f"Swiggy API HTTP error: {e.response.status_code}")
-            return []
+            restaurants = (
+                data.get("data", {})
+                    .get("results", {})
+                    .get("restaurants", [])
+            )
+
+            if not restaurants:
+                # Try alternate path
+                restaurants = (
+                    data.get("data", {})
+                        .get("restaurants", [])
+                )
+
+            logger.info(f"Swiggy returned {len(restaurants)} restaurants")
+            return [self._map_restaurant(r) for r in restaurants[:10]]
+
         except Exception as e:
             logger.error(f"Swiggy fetch failed: {e}")
             return []
 
     def _map_restaurant(self, raw: dict) -> PlatformListing:
-        """
-        Map raw Swiggy API response to PlatformListing.
+        info = raw.get("info", raw)
+        sla = info.get("sla", {})
+        fee = info.get("feeDetails", {})
+        hours = info.get("availability", {})
 
-        ⚠️  Field names below are GUESSES — update after inspecting real API response.
-        Common Swiggy fields: id, name, avgRating, totalRatingsString,
-        sla.deliveryTime, feeDetails.totalFee, aggregatedDiscountInfo
-        """
-        hours_raw = raw.get("availability", {})
         operating_hours = OperatingHours(
-            is_open_now=hours_raw.get("opened", False),
-            weekday_text=hours_raw.get("scheduledSlot", []),
+            is_open_now=hours.get("opened", True),
         )
+
+        restaurant_id = str(info.get("id", ""))
+        name = info.get("name", "")
 
         return PlatformListing(
             platform=Platform.SWIGGY,
-            restaurant_id=str(raw.get("id", "")),
-            name=raw.get("name", ""),
-            rating=float(raw.get("avgRating", 0) or 0),
-            rating_count=raw.get("totalRatingsString"),
-            delivery_time_minutes=raw.get("sla", {}).get("deliveryTime"),
-            delivery_fee=raw.get("feeDetails", {}).get("totalFee"),
-            discount_label=raw.get("aggregatedDiscountInfo", {}).get("header"),
-            deep_link=f"swiggy://restaurants/{raw.get('id')}",
+            restaurant_id=restaurant_id,
+            name=name,
+            rating=float(info.get("avgRating", 0) or 0),
+            rating_count=info.get("totalRatingsString"),
+            delivery_time_minutes=sla.get("deliveryTime"),
+            delivery_fee=fee.get("totalFee"),
+            discount_label=info.get("aggregatedDiscountInfoV3", {}).get("header"),
+            deep_link=f"swiggy://restaurants/{restaurant_id}",
             operating_hours=operating_hours,
-            image_url=raw.get("cloudinaryImageId"),
+            image_url=info.get("cloudinaryImageId"),
         )
 
 
