@@ -1,9 +1,8 @@
 import { FormEvent, useMemo, useState } from "react";
 import {
   ArrowRight,
+  ArrowLeft,
   Clock3,
-  ChevronDown,
-  ChevronUp,
   IndianRupee,
   LocateFixed,
   Loader2,
@@ -205,10 +204,10 @@ function App() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const [openMenuKey, setOpenMenuKey] = useState("");
   const [menuByKey, setMenuByKey] = useState<Record<string, RestaurantMenuResponse>>({});
   const [menuLoadingKey, setMenuLoadingKey] = useState("");
   const [menuError, setMenuError] = useState("");
+  const [selectedRestaurant, setSelectedRestaurant] = useState<UnifiedRestaurant | null>(null);
 
   const locationLabel = useMemo(() => {
     if (activeLocation) {
@@ -288,7 +287,7 @@ function App() {
       setCached(data.cached);
       setSearchedQuery(data.query);
       setActiveLocation(location);
-      setOpenMenuKey("");
+      setSelectedRestaurant(null);
       setMenuError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -298,16 +297,11 @@ function App() {
     }
   }
 
-  async function toggleRestaurantMenu(restaurant: UnifiedRestaurant) {
-    const menuKey = restaurant.google_place_id || `${restaurant.name}-${restaurant.address || ""}`;
+  async function openRestaurantDetail(restaurant: UnifiedRestaurant) {
+    const menuKey = getRestaurantKey(restaurant);
+    setSelectedRestaurant(restaurant);
     setMenuError("");
 
-    if (openMenuKey === menuKey) {
-      setOpenMenuKey("");
-      return;
-    }
-
-    setOpenMenuKey(menuKey);
     if (menuByKey[menuKey]) {
       return;
     }
@@ -571,23 +565,30 @@ function App() {
             </div>
           </div>
 
-          <div className="results-grid">
-            {results.length > 0 ? (
-              results.map((restaurant) => (
-                <RestaurantCard
-                  key={`${restaurant.name}-${restaurant.address}`}
-                  restaurant={restaurant}
-                  menu={menuByKey[restaurant.google_place_id || `${restaurant.name}-${restaurant.address || ""}`]}
-                  isMenuOpen={openMenuKey === (restaurant.google_place_id || `${restaurant.name}-${restaurant.address || ""}`)}
-                  isMenuLoading={menuLoadingKey === (restaurant.google_place_id || `${restaurant.name}-${restaurant.address || ""}`)}
-                  menuError={menuError}
-                  onToggleMenu={() => toggleRestaurantMenu(restaurant)}
-                />
-              ))
+          {selectedRestaurant ? (
+            <RestaurantDetailPage
+              restaurant={selectedRestaurant}
+              menu={menuByKey[getRestaurantKey(selectedRestaurant)]}
+              isMenuLoading={menuLoadingKey === getRestaurantKey(selectedRestaurant)}
+              menuError={menuError}
+              onBack={() => setSelectedRestaurant(null)}
+            />
+          ) : (
+            <div className="results-grid">
+              {results.length > 0 ? (
+                results.map((restaurant) => (
+                  <RestaurantCard
+                    key={`${restaurant.name}-${restaurant.address}`}
+                    restaurant={restaurant}
+                    isMenuLoading={menuLoadingKey === getRestaurantKey(restaurant)}
+                    onOpenDetail={() => openRestaurantDetail(restaurant)}
+                  />
+                ))
             ) : (
               <EmptyState isLoading={isLoading} />
             )}
-          </div>
+            </div>
+          )}
         </section>
       </section>
     </main>
@@ -634,20 +635,18 @@ function rankFoodChoicesForLocation(choices: FoodChoice[], famousQueries: string
   return [...featured, ...remaining];
 }
 
+function getRestaurantKey(restaurant: UnifiedRestaurant) {
+  return restaurant.google_place_id || `${restaurant.name}-${restaurant.address || ""}`;
+}
+
 function RestaurantCard({
   restaurant,
-  menu,
-  isMenuOpen,
   isMenuLoading,
-  menuError,
-  onToggleMenu
+  onOpenDetail
 }: {
   restaurant: UnifiedRestaurant;
-  menu?: RestaurantMenuResponse;
-  isMenuOpen: boolean;
   isMenuLoading: boolean;
-  menuError: string;
-  onToggleMenu: () => void;
+  onOpenDetail: () => void;
 }) {
   const cheaper = restaurant.cheaper_platform;
   const saving = restaurant.estimated_saving ?? 0;
@@ -656,7 +655,18 @@ function RestaurantCard({
   );
 
   return (
-    <article className="restaurant-card">
+    <article
+      className="restaurant-card clickable-card"
+      role="button"
+      tabIndex={0}
+      onClick={onOpenDetail}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpenDetail();
+        }
+      }}
+    >
       <img
         className="restaurant-image"
         src={imageUrl}
@@ -689,23 +699,141 @@ function RestaurantCard({
       </div>
 
       <div className="menu-actions">
-        <button className="secondary-button menu-toggle" type="button" onClick={onToggleMenu}>
+        <button
+          className="secondary-button menu-toggle"
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpenDetail();
+          }}
+        >
           {isMenuLoading ? (
             <Loader2 className="spin" size={17} aria-hidden="true" />
-          ) : isMenuOpen ? (
-            <ChevronUp size={17} aria-hidden="true" />
           ) : (
-            <ChevronDown size={17} aria-hidden="true" />
+            <ArrowRight size={17} aria-hidden="true" />
           )}
-          <span>{isMenuOpen ? "Hide menu" : "View menu & prices"}</span>
+          <span>Open restaurant menu</span>
         </button>
       </div>
-
-      {isMenuOpen && (
-        <MenuPanel menu={menu} isLoading={isMenuLoading} error={menuError} />
-      )}
     </article>
   );
+}
+
+function RestaurantDetailPage({
+  restaurant,
+  menu,
+  isMenuLoading,
+  menuError,
+  onBack
+}: {
+  restaurant: UnifiedRestaurant;
+  menu?: RestaurantMenuResponse;
+  isMenuLoading: boolean;
+  menuError: string;
+  onBack: () => void;
+}) {
+  const imageUrl = apiAssetUrl(
+    restaurant.swiggy?.image_url ?? restaurant.zomato?.image_url ?? fallbackRestaurantImage(restaurant.name)
+  );
+  const cheaper = restaurant.cheaper_platform;
+  const groupedMenu = groupMenuItems(menu);
+
+  return (
+    <article className="restaurant-detail-page">
+      <button className="secondary-button back-button" type="button" onClick={onBack}>
+        <ArrowLeft size={17} aria-hidden="true" />
+        <span>Back to results</span>
+      </button>
+
+      <section className="detail-hero">
+        <img
+          src={imageUrl}
+          alt=""
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = apiAssetUrl(fallbackRestaurantImage(restaurant.name));
+          }}
+        />
+        <div>
+          <p className="eyebrow">Restaurant menu</p>
+          <h2>{restaurant.name}</h2>
+          <p>
+            <MapPin size={16} aria-hidden="true" />
+            <span>{restaurant.address || "Address not available"}</span>
+          </p>
+          {cheaper && (
+            <div className="saving-badge">
+              <IndianRupee size={14} aria-hidden="true" />
+              <span>Best fee on {cheaper}</span>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="platform-grid detail-platforms">
+        <PlatformPanel label="Swiggy" listing={restaurant.swiggy} cheaper={cheaper === "swiggy"} />
+        <PlatformPanel label="Zomato" listing={restaurant.zomato} cheaper={cheaper === "zomato"} />
+      </div>
+
+      <section className="full-menu-section">
+        <div className="menu-header">
+          <div>
+            <h3>Full menu</h3>
+            <p>{menu?.source === "estimated_preview" ? "Estimated preview for app testing" : "Provider menu"}</p>
+          </div>
+          {menu && <span>{menu.items.length} items</span>}
+        </div>
+
+        {isMenuLoading && (
+          <div className="detail-loading">
+            <Loader2 className="spin" size={24} aria-hidden="true" />
+            <p>Loading menu...</p>
+          </div>
+        )}
+
+        {menuError && <p className="menu-note error">{menuError}</p>}
+
+        {!isMenuLoading && !menuError && menu && (
+          <div className="menu-category-list">
+            {groupedMenu.map(([category, items]) => (
+              <section className="menu-category" key={category}>
+                <h4>{category}</h4>
+                <div className="menu-list">
+                  {items.map((item) => (
+                    <div className="menu-item full-menu-item" key={`${item.category}-${item.name}`}>
+                      <div>
+                        <strong>{item.name}</strong>
+                        <span>
+                          {item.is_veg ? "Veg" : "Non-veg"}
+                          {item.is_popular ? " · Popular" : ""}
+                        </span>
+                      </div>
+                      <b>₹{Math.round(item.price)}</b>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
+
+        {menu?.disclaimer && <p className="menu-note">{menu.disclaimer}</p>}
+      </section>
+    </article>
+  );
+}
+
+function groupMenuItems(menu?: RestaurantMenuResponse) {
+  if (!menu) {
+    return [];
+  }
+
+  const grouped = new Map<string, typeof menu.items>();
+  for (const item of menu.items) {
+    grouped.set(item.category, [...(grouped.get(item.category) ?? []), item]);
+  }
+
+  return Array.from(grouped.entries());
 }
 
 function MenuPanel({

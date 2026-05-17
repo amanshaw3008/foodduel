@@ -234,6 +234,21 @@ async def test_provider_menu_endpoint_returns_item_ids():
 
 
 @pytest.mark.asyncio
+async def test_restaurant_menu_endpoint_returns_expanded_menu():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get(
+            "/api/restaurants/menu",
+            params={"restaurant_name": "Biryani Box", "query": "biryani"},
+        )
+
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["source"] == "estimated_preview"
+    assert len(data["items"]) >= 12
+    assert len({item["category"] for item in data["items"]}) >= 4
+
+
+@pytest.mark.asyncio
 async def test_cart_compare_returns_sorted_quotes():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.post(

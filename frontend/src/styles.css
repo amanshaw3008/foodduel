@@ -436,11 +436,128 @@ select:focus {
   box-shadow: 0 10px 32px rgba(31, 37, 35, 0.08);
 }
 
+.clickable-card {
+  cursor: pointer;
+}
+
+.clickable-card:focus-visible {
+  outline: 3px solid rgba(31, 122, 77, 0.35);
+  outline-offset: 3px;
+}
+
 .restaurant-image {
   width: 100%;
   aspect-ratio: 16 / 8;
   object-fit: cover;
   background: #d8d1c0;
+}
+
+.restaurant-detail-page {
+  display: grid;
+  gap: 18px;
+}
+
+.back-button {
+  width: fit-content;
+}
+
+.detail-hero {
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(280px, 1fr);
+  gap: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 10px 32px rgba(31, 37, 35, 0.08);
+}
+
+.detail-hero img {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  object-fit: cover;
+  background: #d8d1c0;
+}
+
+.detail-hero > div {
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  padding: 28px;
+}
+
+.detail-hero h2 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.8rem);
+  line-height: 1.02;
+}
+
+.detail-hero p:not(.eyebrow) {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 58ch;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.detail-hero p svg {
+  margin-top: 3px;
+  flex: 0 0 auto;
+}
+
+.detail-platforms {
+  padding: 0;
+}
+
+.full-menu-section {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.full-menu-section .menu-header h3 {
+  margin: 0 0 4px;
+  font-size: 1.35rem;
+}
+
+.detail-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 120px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.detail-loading p {
+  margin: 0;
+}
+
+.menu-category-list {
+  display: grid;
+  gap: 18px;
+}
+
+.menu-category {
+  display: grid;
+  gap: 8px;
+}
+
+.menu-category h4 {
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  font-size: 1rem;
+}
+
+.full-menu-item {
+  padding: 12px 0;
 }
 
 .restaurant-head {
@@ -712,6 +829,14 @@ select:focus {
 
   h1 {
     max-width: 18ch;
+  }
+
+  .detail-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-hero img {
+    min-height: 240px;
   }
 }
 
